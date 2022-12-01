@@ -1,0 +1,257 @@
+{
+    name: "textWidthVideo",
+        args: {
+        body: {
+            value: `His Tinder profile said he was 45, but he looked to be in his early thirties at most.
+Looking for a sugar baby. $700 weekly. No sex.
+It sounded too good to be true, but, as a broke university student, I was willing to take my chances. I swiped right, and Tinder let me know it was a match. His message came seconds later.
+Hey, there sweetheart :)`,
+                name: "Body",
+                    type: "text"
+        },
+        title: {
+            value: "My sugar daddy asks me for weird favors",
+                name: "Title",
+                    type: "text"
+        },
+        background: {
+            value: "#ff5959",
+                name: "Background",
+                    type: "color"
+        },
+        videoBackground: {
+            value: "#fff",
+                name: "Video Background",
+                    type: "color"
+        },
+        textColor: {
+            value: "#fff",
+                name: "Text Color",
+                    type: "color"
+        },
+        textOutline: {
+            value: "#000",
+                name: "Text Outline",
+                    type: "color"
+        },
+        videoSearch: {
+            value: "satisfying",
+                name: "Video Search Term",
+                    type: "text"
+        },
+        logo: {
+            value: [],
+                name: "Logo",
+                    type: "file"
+        },
+        logoWidth: {
+            value: 50,
+                name: "Logo Width",
+                    type: "number"
+        },
+        logoHeight: {
+            value: 150,
+                name: "Logo Height",
+                    type: "number"
+        },
+        saveName: {
+            value: "nosleep",
+                name: "Save As",
+                    type: "text"
+        },
+        progressBar: {
+            value: "#ffeb3b",
+                name: "Progress Bar Color",
+                    type: "color"
+        },
+        description: {
+            value: "",
+                name: "Description (Autofilled)",
+                    type: "text"
+        }
+    },
+
+    autofillArgs: {
+        subreddit: {
+            value: "nosleep",
+                name: "Subreddit",
+                    type: "text"
+        },
+        sort: {
+            value: "new",
+                values: ["new", "hot", "top", "rising"],
+                    name: "Sort By",
+                        type: "select"
+        },
+        index: {
+            value: 0,
+                name: "Select Post",
+                    type: "number"
+        },
+        hashtags: {
+            value: 100,
+                name: "Hashtags",
+                    type: "number"
+        }
+    },
+
+    function: (args, download, cb) => {
+        let d = new draft();
+    let s = new say();
+
+    let canvas = document.querySelector("canvas");
+    let ctx = canvas.getContext("2d");
+    let r = new recorder(canvas, s.stream());
+
+
+    d.init(canvas, ctx, 1080, 1920, args.videoBackground.value);
+    d.rect("top", 0, 0, 1080, 250, args.background.value);
+    d.rect("bottom", 0, 1320, 1080, 600, args.background.value);
+    d.text("title", args.title.value, 540 - (d.measureText(args.title.value, "40px sans-serif").width / 2), 150, "40px sans-serif", args.textColor.value, args.textOutline.value);
+    let logo = new Image();
+    logo.onload = () => {
+        d.image("image", logo, 0, 0, args.logoWidth.value, args.logoHeight.value);
+        d.draw();
+    };
+    logo.src = args.logo.value[0];
+    d.draw();
+
+    gifs(d, 0, 250, 1080, 1070);
+
+    let parsedText = args.body.value.split("\n");
+    let subStrings = [];
+    for (let i = 0; i < parsedText.length; i++) {
+        const str = parsedText[i];
+        let len = d.measureText(str, "60px sans-serif").width;
+        if (len / 680 > 1) {
+            let strSplit = str.split(" ");
+            let amt = Math.ceil(len / 1360);
+            for (let b = 0; b < amt; b++) {
+                subStrings.push(strSplit.slice(Math.floor(strSplit.length / amt) * b, Math.floor(strSplit.length / amt) * (b + 1)).join(" "));
+            }
+        } else {
+            subStrings.push(str);
+        }
+    }
+    subStrings = subStrings.filter(e => e);
+    subStrings.push("");
+    subStrings.push("");
+    subStrings.forEach((str) => {
+        s.add(stripWord(str));
+    });
+    s.loaded(() => {
+        r.start();
+        d.step("text-loop", (i) => {
+            let subSplit = splitSentance(subStrings[i]);
+            let offset = 0;
+            if (subSplit[0].length > subSplit[1].length) {
+                offset = 540 - (d.measureText(subSplit[0], "60px sans-serif").width / 2);
+            } else {
+                offset = 540 - (d.measureText(subSplit[1], "60px sans-serif").width / 2);
+            }
+            multiText(d, "main-text", subSplit[0], offset, 1500, "60px sans-serif", args.textColor.value);
+            multiText(d, "sub-text", subSplit[1], offset, 1570, "60px sans-serif", args.textColor.value);
+            d.rect("progress-bar", 0, 1900, 1080 * (i / (subStrings.length - 3)), 20, args.progressBar.value);
+            d.draw();
+            s.run(stripWord(subStrings[i]), -150).then(async () => {
+                d.next("text-loop");
+                if (i >= subStrings.length - 3) {
+                    stopVideo = true;
+                    // d.stop("video");
+                    r.stop((url) => {
+                        if (download) {
+                            r.download(args.saveName.value);
+                        }
+                        cb();
+                    });
+                }
+            });
+        });
+
+    });
+    function stripWord(word) {
+        let validChars = "abcdefghijklmnopqrstuvwxyz1234567890_-$'ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+        return word
+            .split("")
+            .filter((c) => validChars.includes(c))
+            .join("")
+            .toLowerCase().trim();
+    }
+
+    function splitSentance(text) {
+        let halfIndex = text.indexOf(" ", Math.floor(text.length / 2));
+        return [text.slice(0, halfIndex).trim(), text.slice(halfIndex).trim()];
+    }
+
+    let prevIds = {};
+    function multiText(d, id, text, x, y, font, baseColor) {
+        if (prevIds[id]) {
+            for (let i = 0; i < prevIds[id].length; i++) {
+                d.remove(prevIds[id][i]);
+            }
+        } else {
+            prevIds[id] = [];
+        }
+        let textSplit = text.split(" ");
+        let colorIndex = new Array(textSplit.length).fill(baseColor);
+        colorIndex[Math.floor(Math.random() * textSplit.length)] = randomColor();
+        for (let i = 0; i < textSplit.length; i++) {
+            d.text(id + i, textSplit[i], x, y, font, colorIndex[i], args.textOutline);
+            prevIds[id].push(id + i);
+            x += d.measureText(textSplit[i] + " ", font).width;
+        }
+    }
+    let stopVideo = false;
+    function gifs(d, x, y, width, height) {
+        // RyxTulioP0ouW0EBJzZYz4QgDWMaK1JR
+        let url = `https://api.giphy.com/v1/gifs/search?api_key=RyxTulioP0ouW0EBJzZYz4QgDWMaK1JR&q=${args.videoSearch.value}`;
+        fetch(url)
+            .then(r => r.json())
+            .then((res) => {
+                let data = res.data;
+                d.step("video-loop", (i) => {
+                    let video = document.createElement("video");
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        let adjHeight = height;
+                        let adjWidth = width;
+                        let adjX = x;
+                        let adjY = y;
+                        if (video.videoWidth > video.videoHeight) {
+                            adjHeight = height * (video.videoWidth / width);
+                            adjY += (height - adjHeight) / 2;
+                        } else if (video.videoHeight > video.videoWidth) {
+                            adjWidth = width * (video.videoHeight / height);
+                            adjX += (width - adjWidth) / 2;
+                        }
+                        d.video("video", video, adjX, adjY, adjWidth, adjHeight).then(() => {
+                            if (!stopVideo) {
+                                d.rect("vidBG", x, y, width, height, args.videoBackground.value);
+                                d.draw();
+                                d.next("video-loop");
+                            }
+                        });
+                    };
+                    video.crossOrigin = "anonymous";
+                    video.src = `https://i.giphy.com/media/${data[Math.floor(Math.random() * data.length)].id}/giphy.mp4`;
+                });
+
+            });
+    }
+},
+
+autofill: (args, inputArgs) => {
+    return new Promise((resolve, reject) => {
+        fetch(`https://cors.lowsh.workers.dev/?https://reddit.com/r/${args.subreddit.value}/${args.sort.value}.json`)
+            .then(res => res.json())
+            .then(async (data) => {
+                let post = data.data.children[args.index.value];
+                inputArgs.title.value = post.data.title;
+                inputArgs.body.value = post.data.selftext;
+                let hashtags = await tag(post.data.selftext, args.hashtags.value);
+                inputArgs.description.value = `${post.data.title} ${hashtags}`;
+                resolve(inputArgs);
+            });
+    });
+}
+}

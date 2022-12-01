@@ -1,0 +1,25 @@
+{
+  "name": "draft",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lakefox/draft.git"
+  },
+  "author": "lakefox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lakefox/draft/issues"
+  },
+  "homepage": "https://github.com/lakefox/draft#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pocketbase": "^0.8.1"
+  }
+}
