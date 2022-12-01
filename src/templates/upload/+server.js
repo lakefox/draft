@@ -1,10 +1,18 @@
-const fs = require("fs");
-const path = require("path");
-
-function load(req) {
-    let filePath = path.join(__dirname, `../../../templates/${req.body.name}.js`);
-    fs.writeFileSync(filePath, req.body.text);
-    return { error: false };
+function load(req, pb) {
+    return new Promise((resolve, reject) => {
+        console.log(req.body);
+        pb.authStore.loadFromCookie(req.headers.authorization);
+        pb.collection('templates').create(req.body).then((record) => {
+            pb.authStore.clear();
+            record.error = false;
+            console.log(record);
+            resolve(record);
+        }).catch((error) => {
+            pb.authStore.clear();
+            console.log(error);
+            resolve({ error: true, errorMsg: error });
+        });
+    });
 }
 
 module.exports.POST = load;

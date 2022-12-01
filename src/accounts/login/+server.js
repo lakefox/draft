@@ -10,6 +10,7 @@ function load(req, pb) {
                 error: false
             });
         }).catch((error) => {
+            pb.authStore.clear();
             resolve({ error: true, errorMsg: error });
         });
     });

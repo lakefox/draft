@@ -1,22 +1,41 @@
-function load(req, pb) {
+function loadGET(req, pb) {
     return new Promise((resolve, reject) => {
         pb.authStore.loadFromCookie(req.headers.authorization);
         pb.collection('templates').getList(1, 50, {
             filter: `username = "${req.params.username}" && name = "${req.params.name}"`
         }).then((list) => {
             let base = { error: false, template: list.items[0] };
-            fetch(`${pb.dbURL}/api/files/${base.template.collectionId}/${base.template.id}/${base.template.file}`)
-                .then(r => r.text()).then((res) => {
-                    base.template.data = res;
-                    resolve(base);
-                });
+            resolve(base);
         }).catch((error) => {
+            pb.authStore.clear();
             resolve({ error: true, errorMsg: error });
         });;
     })
 }
 
-module.exports.GET = load;
+function loadPOST(req, pb) {
+    return new Promise((resolve, reject) => {
+        pb.authStore.loadFromCookie(req.headers.authorization);
+        pb.collection('templates').getList(1, 50, {
+            filter: `username = "${req.params.username}" && name = "${req.params.name}"`
+        }).then((list) => {
+            if (list.items.length > 0) {
+                pb.collection('templates').update(list.items[0].id, req.body.data).then(() => {
+                    pb.authStore.clear();
+                    resolve({ error: false })
+                }).catch((error) => {
+                    resolve({ error: true, errorMsg: error });
+                });
+            }
+        }).catch((error) => {
+            pb.authStore.clear();
+            resolve({ error: true, errorMsg: error });
+        });;
+    })
+}
+
+module.exports.GET = loadGET;
+module.exports.POST = loadPOST;
 
 
 

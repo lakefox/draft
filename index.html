@@ -18,15 +18,10 @@
     <script src="./libraries/edb.prebuilt.js"></script>
     <script src="./libraries/emoji.js"></script>
     <script src="./libraries/drawImage.js"></script>
-    <!-- <script src="./templates/textWithVideo.js"></script> -->
-    <script src="./templates/slideshow.js"></script>
-    <script src="./templates/wallpapers.js"></script>
-    <script src="./templates/recipes.js"></script>
-    <!-- <script src="./templates/index.js"></script> -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         .minusNav {
-            height: calc(100vh - 80px);
+            height: calc(100vh - 64px);
         }
 
         .input[type="file"] {
@@ -47,7 +42,7 @@
             height: 30%;
             background: #212121;
             position: fixed;
-            bottom: 0%;
+            bottom: 8px;
             text-align: center;
         }
 
@@ -57,10 +52,23 @@
             z-index: 1;
             width: 100%;
         }
+
+        #createTemplate {
+            position: absolute;
+            bottom: 20px;
+            background: #fff;
+            width: calc(100% - 40px);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #212121;
+            font-weight: 700;
+            font-size: 17px;
+        }
     </style>
 </head>
 
-<body>
+<body style="overflow: hidden;">
     <!-- Navbar -->
     <div class="navbar bg-base-100">
         <div class="flex-none">
@@ -99,7 +107,7 @@
         <div class="drawer-side">
             <label for="my-drawer" class="drawer-overlay"></label>
             <ul id="sideBar" class="menu p-4 overflow-y-auto w-80 bg-base-100 text-base-content">
-                <li onclick="createTemplate()" class="border-2 mb-[10px] border-slate-50"><a>Create Template</a></li>
+
             </ul>
         </div>
     </div>
@@ -127,12 +135,12 @@
                     style="color: rgb(255, 255, 255); font-size: 30px; cursor: pointer; display: none;"></i>
             </div>
             <div class="flex absolute top-[10px] right-[10px] text-[20px]">
-                <i id="runCode" onclick="runCodeEditor()" class="bx bx-refresh cursor-pointer"
-                    style="display: block;"></i>
+                <i onclick="reload()" class="bx bx-refresh cursor-pointer"></i>
                 <i id="fullScreen" class="bx bx-expand cursor-pointer" style="display: block;"
                     onclick="toggleCodeFullScreen()"></i>
                 <i id="smallScreen" class="bx bx-collapse cursor-pointer" style="display: none;"
                     onclick="toggleCodeFullScreen()"></i>
+                <i class='bx bxs-save cursor-pointer' onclick="updateTemplate()"></i>
             </div>
         </div>
 
@@ -147,49 +155,9 @@
     <script src="./js/script.js"></script>
     <script>
         var editor = ace.edit("editor");
+        editor.getSession().setUseWorker(false);
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/javascript");
-        editor.setValue(`var exports = {
-    name: "Video",
-    args: {
-        videoBackground: {
-            value: "#fff",
-                name: "Video Background",
-                    type: "color"
-        }
-    },
-
-    autoFillArgs: {
-        hashtags: {
-            value: 100,
-                name: "Hashtags",
-                    type: "number"
-        }
-    },
-
-    function: function (args, download, cb) {
-        let d = new draft();
-
-        let canvas = document.querySelector("canvas");
-        let ctx = canvas.getContext("2d");
-        let r = new recorder(canvas, s.stream());
-
-        d.init(canvas, ctx, 1080, 1920, args.videoBackground.value);
-        r.start();
-
-        r.stop((url) => {
-            if (download) {
-                r.download(args.saveName.value)
-            }
-            cb();
-        });
-    },
-
-    autoFill: function (AutoFillArgs, renderArgs) {
-        renderArgs.videoBackground.value = "#000";
-    }
-}
-`)
     </script>
 </body>
 

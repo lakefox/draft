@@ -24,6 +24,7 @@ function load(req, pb) {
                 });
             }
         }).catch((error) => {
+            pb.authStore.clear();
             resolve({ error: true, errorMsg: error });
         });;
     });

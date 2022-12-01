@@ -64,10 +64,6 @@ function LOW(baseURL) {
         });
     }
 
-    this.log = () => {
-        console.log(this.username);
-    }
-
     this.deleteAccount = () => {
         return new Promise((resolve, reject) => {
             postData(`${baseURL}/accounts/delete`, {
@@ -100,6 +96,42 @@ function LOW(baseURL) {
         });
     }
 
+    this.update = (template, newName, data) => {
+        return new Promise((resolve, reject) => {
+            let body = {
+                name: newName,
+                username: this.username,
+                file: data
+            }
+            postData(`${baseURL}/templates/${this.username}/${template}`, { data: body }
+            ).then((d) => {
+                if (d.err) {
+                    reject(err);
+                } else {
+                    resolve(d.template);
+                }
+            });
+        });
+    }
+
+    this.upload = (template, data) => {
+        return new Promise((resolve, reject) => {
+            let body = {
+                name: template,
+                username: this.username,
+                file: data
+            }
+            postData(`${baseURL}/templates/upload`, body
+            ).then((d) => {
+                if (d.err) {
+                    reject(err);
+                } else {
+                    resolve(d.template);
+                }
+            });
+        });
+    }
+
     this.list = () => {
         return new Promise((resolve, reject) => {
             fetch(`${baseURL}/templates/${this.username}`, {
@@ -107,6 +139,7 @@ function LOW(baseURL) {
                     'Authorization': token
                 }
             }).then(r => r.json()).then((d) => {
+                console.log(d)
                 if (d.err) {
                     reject(err);
                 } else {

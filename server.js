@@ -38,14 +38,12 @@ function handle(req, res, isPost) {
             routes = collapsePaths(dir);
         }
     }
-    console.log(dir, routes);
     if (req.path.indexOf("../") > -1) {
         throw new Error('401')
     } else {
         let filePath = path.join(__dirname, src, req.path) + "/+server.js";
         if (!fs.existsSync(filePath)) {
             let route = matchRoute(req.path, routes, dir);
-            console.log(route);
             if (route) {
                 let func;
                 if (devMode) {

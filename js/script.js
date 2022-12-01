@@ -5,17 +5,19 @@ let low = new LOW("http://localhost:8080");
 low.login("mason@lakefox.net", "12345678").then((token) => {
     console.log(token);
     low.list().then(async (templates) => {
-        console.log(templates);
         templateIndex = {};
         for (let i = 0; i < templates.length; i++) {
             let tempData = await low.get(templates[i].name);
+            console.log(tempData);
             templateIndex[tempData.name] = await getCode(tempData);
+            templateIndex[tempData.name].carbonCopy = tempData.file;
         }
-
-        console.log(templateIndex);
 
         templateNames = Object.keys(templateIndex);
 
+        document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
+                    <i class='bx bxs-file'></i> Create Template
+                </div>`;
         for (let i = 0; i < templateNames.length; i++) {
             const name = templateNames[i];
             document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
@@ -23,7 +25,11 @@ low.login("mason@lakefox.net", "12345678").then((token) => {
 
         loadedTemplate = "";
         document.querySelector("#menu").click();
-        loadTemplate({ dataset: { name: templateNames[2] } });
+        if (templateNames.length > 0) {
+            loadTemplate({ dataset: { name: templateNames[0] } });
+        } else {
+            createTemplate();
+        }
     });
 }).catch((err) => {
     console.log(err);
@@ -35,6 +41,8 @@ function loadTemplate(e) {
     let key = e.dataset.name;
     loadedTemplate = key;
     document.querySelector("#menu").click();
+
+    editor.session.setValue(templateIndex[key].carbonCopy)
 
     let templateArgs = templateIndex[key].args;
 
@@ -193,6 +201,29 @@ function autofill() {
     });
 }
 
+async function reload(newTemplate = false) {
+    let code = await getCode({ id: parseInt(Math.random() * 1000), file: editor.getValue() });
+    if (!newTemplate) {
+        delete templateIndex[loadedTemplate];
+    }
+    templateIndex[code.name] = code;
+    templateIndex[code.name].carbonCopy = editor.getValue();
+
+    templateNames = Object.keys(templateIndex);
+    document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
+                    <i class='bx bxs-file'></i> Create Template
+                </div>`;
+    for (let i = 0; i < templateNames.length; i++) {
+        const name = templateNames[i];
+        document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
+    }
+
+    loadedTemplate = "";
+    document.querySelector("#menu").click();
+    loadTemplate({ dataset: { name: code.name } });
+}
+
+
 let editorOpen = true;
 let editorFullScreen = false;
 
@@ -201,11 +232,13 @@ function toggleCode() {
         document.querySelector("#editorOpen").style.display = "block";
         document.querySelector("#editorClose").style.display = "none";
         document.querySelector("#editorCont").style.height = "38px";
+        document.querySelector("#editorCont").style.bottom = "0";
         editorOpen = false;
     } else {
         document.querySelector("#editorOpen").style.display = "none";
         document.querySelector("#editorClose").style.display = "block";
         document.querySelector("#editorCont").style.height = "30%";
+        document.querySelector("#editorCont").style.bottom = "8px";
         editorOpen = true;
     }
     editor.resize()
@@ -220,10 +253,12 @@ function toggleCodeFullScreen() {
             document.querySelector("#editorOpen").style.display = "block";
             document.querySelector("#editorClose").style.display = "none";
             document.querySelector("#editorCont").style.height = "38px";
+            document.querySelector("#editorCont").style.bottom = "0";
         } else {
             document.querySelector("#editorOpen").style.display = "none";
             document.querySelector("#editorClose").style.display = "block";
             document.querySelector("#editorCont").style.height = "30%";
+            document.querySelector("#editorCont").style.bottom = "8px";
         }
         editorFullScreen = false;
     } else {
@@ -232,6 +267,7 @@ function toggleCodeFullScreen() {
         document.querySelector("#editorOpen").style.display = "none";
         document.querySelector("#editorClose").style.display = "block";
         document.querySelector("#editorCont").style.height = "100%";
+        document.querySelector("#editorCont").style.bottom = "8px";
         editorFullScreen = true;
     }
     editor.resize()
@@ -254,10 +290,69 @@ function loadScript(text, id) {
         resolve();
     })
 }
+
 function getCode(tempData) {
     return new Promise((resolve, reject) => {
-        loadScript(`let f${tempData.id} = ${tempData.data}`, "e" + tempData.id).then(() => {
+        loadScript(`let f${tempData.id} = ${tempData.file}`, "e" + tempData.id).then(() => {
             resolve(eval(`f${tempData.id}`));
         }).catch(reject);
     });
+}
+
+function createTemplate() {
+    editor.session.setValue(`{
+    name: "Video",
+    args: {
+        videoBackground: {
+            value: "#fff",
+                name: "Video Background",
+                    type: "color"
+        }
+    },
+
+    autoFillArgs: {
+        hashtags: {
+            value: 100,
+                name: "Hashtags",
+                    type: "number"
+        }
+    },
+
+    function: function (args, download, cb) {
+        let d = new draft();
+
+        let canvas = document.querySelector("canvas");
+        let ctx = canvas.getContext("2d");
+        let r = new recorder(canvas, s.stream());
+
+        d.init(canvas, ctx, 1080, 1920, args.videoBackground.value);
+        r.start();
+
+        r.stop((url) => {
+            if (download) {
+                r.download(args.saveName.value)
+            }
+            cb();
+        });
+    },
+
+    autoFill: function (AutoFillArgs, renderArgs) {
+        renderArgs.videoBackground.value = "#000";
+    }
+}`);
+    reload(true);
+    low.upload("Video", editor.getValue()).then((e) => {
+        console.log(e);
+    })
+}
+
+function updateTemplate() {
+    getCode({ id: parseInt(Math.random() * 1000), file: editor.getValue() }).then((e) => {
+        low.update(loadedTemplate, e.name, editor.getValue()).then((e) => {
+            reload();
+        }).catch((e) => {
+            console.log(e);
+        })
+    })
+
 }
