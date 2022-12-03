@@ -5,6 +5,7 @@ let app = express();
 let fs = require("fs");
 let cors = require("cors");
 const util = require('util');
+const compression = require('compression');
 
 const dbURL = 'http://127.0.0.1:8090';
 const pb = new PocketBase(dbURL);
@@ -13,6 +14,8 @@ pb.dbURL = dbURL;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(compression());
 app.listen(8080);
 
 const src = "./src";
@@ -23,10 +26,12 @@ let dirStr = JSON.stringify(dir);
 let routes = collapsePaths(dir);
 
 app.get("*", async (req, res) => {
+    res.cookie('cookieName', 'cookieValue', { sameSite: 'Strict', secure: true });
     handle(req, res);
 });
 
 app.post("*", async (req, res) => {
+    res.cookie('cookieName', 'cookieValue', { sameSite: 'Strict', secure: true });
     handle(req, res, true);
 });
 

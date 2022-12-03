@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="black">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./assets/logo.png" type="image/x-icon">
+    <title>LOW Draft</title>
+    <link href="./css/daisyui.css" rel="stylesheet" type="text/css" />
+    <script src="./js/low.js"></script>
+    <script src="./css/tailwind.css"></script>
+    <script src="./js/randomColor.js"></script>
+    <script src="./libraries/record.js"></script>
+    <script src="./libraries/hashtag.js"></script>
+    <script src="./libraries/say.js"></script>
+    <script src="./libraries/draft.js"></script>
+    <!-- <script src="./libraries/edb.prebuilt.js"></script> -->
+    <!-- <script src="./libraries/emoji.js"></script> -->
+    <script src="./libraries/drawImage.js"></script>
+    <link href='./css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        .minusNav {
+            height: calc(100vh - 64px);
+        }
+
+        .input[type="file"] {
+            background: #000;
+            border: none;
+            font-size: 12px;
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        .bg-clear {
+            background: url(./assets/transp_bg.png);
+        }
+
+        #editorCont {
+            width: calc(100% - 410px);
+            margin-left: 410px;
+            height: 30%;
+            background: #212121;
+            position: fixed;
+            bottom: 8px;
+            text-align: center;
+        }
+
+        #editor {
+            height: calc(100% - 30px);
+            bottom: 0;
+            z-index: 1;
+            width: 100%;
+        }
+
+        #createTemplate {
+            position: absolute;
+            bottom: 20px;
+            background: #fff;
+            width: calc(100% - 40px);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #212121;
+            font-weight: 700;
+            font-size: 17px;
+        }
+    </style>
+</head>
+
+<body style="overflow: hidden;">
+    <!-- Navbar -->
+    <div class="navbar bg-base-100">
+        <div class="flex-none">
+            <label id="menu" for="my-drawer" class="btn btn-square btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    class="inline-block w-5 h-5 stroke-current">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </label>
+        </div>
+        <div class="flex-1">
+            <a class="btn btn-ghost normal-case text-xl">LOW</a>
+        </div>
+        <div class="w-[30px] h-[30px] bg-[#ff5354] text-[25px] text-center rounded-[2px] text-[#000]">
+            <i class='bx bxs-trash mx-auto cursor-pointer' onclick="deleteTemplate()"></i>
+        </div>
+    </div>
+    <!-- Sidebar -->
+    <div class="drawer minusNav flex">
+        <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-side">
+            <label for="my-drawer" class="drawer-overlay"></label>
+            <ul id="sideBar" class="menu p-4 overflow-y-auto w-80 bg-base-100 text-base-content">
+
+            </ul>
+        </div>
+    </div>
+    <div class="absolute top-[80px] left-0 w-full flex justify-between minusNav">
+        <div id="controls" class="ml-[10px] w-auto min-w-[400px] overflow-y-auto pb-[100px]">
+
+        </div>
+        <div id="canvas" class="w-full flex justify-center items-center">
+            <canvas class="bg-clear"></canvas>
+        </div>
+    </div>
+    <input type="checkbox" id="my-modal-4" class="modal-toggle" />
+    <label for="my-modal-4" class="modal cursor-pointer">
+        <label class="modal-box relative" for="">
+            <h3 class="text-lg font-bold">Congrats, your video finished!</h3>
+        </label>
+    </label>
+
+    <div id="editorCont" style="height: 30%;">
+        <div>
+            <div class="flex justify-center items-center mb-[8px]">
+                <i id="editorClose" class="bx bx-chevron-down cursor-pointer" onclick="toggleCode()"
+                    style="color: rgb(255, 255, 255); font-size: 30px; cursor: pointer; display: block;"></i>
+                <i id="editorOpen" class="bx bx-chevron-up cursor-pointer" onclick="toggleCode()"
+                    style="color: rgb(255, 255, 255); font-size: 30px; cursor: pointer; display: none;"></i>
+            </div>
+            <div class="flex absolute top-[10px] right-[10px] text-[20px]">
+                <i onclick="reload()" class="bx bx-refresh cursor-pointer"></i>
+                <i id="fullScreen" class="bx bx-expand cursor-pointer" style="display: block;"
+                    onclick="toggleCodeFullScreen()"></i>
+                <i id="smallScreen" class="bx bx-collapse cursor-pointer" style="display: none;"
+                    onclick="toggleCodeFullScreen()"></i>
+                <i class='bx bxs-save cursor-pointer' onclick="updateTemplate()"></i>
+            </div>
+        </div>
+
+        <div id="editor">
+
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.13.1/ace.js" type="text/javascript"
+        charset="utf-8"></script>
+    <script src="./js/script.js"></script>
+    <script>
+        var editor = ace.edit("editor");
+        editor.getSession().setUseWorker(false);
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/javascript");
+    </script>
+</body>
+
+</html>
