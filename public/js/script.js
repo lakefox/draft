@@ -3,12 +3,10 @@ let templateIndex, templateNames, loadedTemplate;
 
 let low = new LOW("http://localhost:8080");
 low.login("mason@lakefox.net", "12345678").then((token) => {
-    console.log(token);
     low.list().then(async (templates) => {
         templateIndex = {};
         for (let i = 0; i < templates.length; i++) {
             let tempData = await low.get(templates[i].name);
-            console.log(tempData);
             templateIndex[tempData.name] = await getCode(tempData);
             templateIndex[tempData.name].carbonCopy = tempData.file;
         }

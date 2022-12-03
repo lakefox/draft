@@ -1,4 +1,4 @@
-function LOW(baseURL) {
+function LOW(baseURL = "") {
     this.email = null;
     this.password = null;
     this.username = null;
