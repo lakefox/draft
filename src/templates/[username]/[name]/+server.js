@@ -2,7 +2,7 @@ function loadGET(req, pb) {
     return new Promise((resolve, reject) => {
         pb.authStore.loadFromCookie(req.headers.authorization);
         pb.collection('templates').getList(1, 50, {
-            filter: `username = "${req.params.username}" && name = "${req.params.name}"`
+            filter: `username = "${decodeURIComponent(req.params.username)}" && name = "${decodeURIComponent(req.params.name)}"`
         }).then((list) => {
             let base = { error: false, template: list.items[0] };
             resolve(base);
@@ -17,7 +17,7 @@ function loadPOST(req, pb) {
     return new Promise((resolve, reject) => {
         pb.authStore.loadFromCookie(req.headers.authorization);
         pb.collection('templates').getList(1, 50, {
-            filter: `username = "${req.params.username}" && name = "${req.params.name}"`
+            filter: `username = "${decodeURIComponent(req.params.username)}" && name = "${decodeURIComponent(req.params.name)}"`
         }).then((list) => {
             if (list.items.length > 0) {
                 pb.collection('templates').update(list.items[0].id, req.body.data).then(() => {

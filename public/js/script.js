@@ -2,36 +2,45 @@
 let templateIndex, templateNames, loadedTemplate;
 
 let low = new LOW("http://localhost:8080");
-low.login("mason@lakefox.net", "12345678").then((token) => {
-    low.list().then(async (templates) => {
-        templateIndex = {};
-        for (let i = 0; i < templates.length; i++) {
-            let tempData = await low.get(templates[i].name);
-            templateIndex[tempData.name] = await getCode(tempData);
-            templateIndex[tempData.name].carbonCopy = tempData.file;
-        }
+load(localStorage.email, localStorage.password);
+function load(email, password) {
+    low.login(email, password).then((token) => {
+        low.list().then(async (templates) => {
+            templateIndex = {};
+            console.log(templates);
+            for (let i = 0; i < templates.length; i++) {
+                console.log(templates[i].name);
+                let tempData = await low.get(templates[i].name);
+                console.log(tempData);
+                templateIndex[tempData.name] = await getCode(tempData);
+                templateIndex[tempData.name].carbonCopy = tempData.file;
+            }
 
-        templateNames = Object.keys(templateIndex);
+            templateNames = Object.keys(templateIndex);
 
-        document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
+            document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
                     <i class='bx bxs-file'></i> Create Template
                 </div>`;
-        for (let i = 0; i < templateNames.length; i++) {
-            const name = templateNames[i];
-            document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
-        }
+            for (let i = 0; i < templateNames.length; i++) {
+                const name = templateNames[i];
+                document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50 rounded-[5px]" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
+            }
 
-        loadedTemplate = "";
-        document.querySelector("#menu").click();
-        if (templateNames.length > 0) {
-            loadTemplate({ dataset: { name: templateNames[0] } });
-        } else {
-            createTemplate();
-        }
+            loadedTemplate = "";
+            document.querySelector("#menu").click();
+            if (templateNames.length > 0) {
+                loadTemplate({ dataset: { name: templateNames[0] } });
+            } else {
+                createTemplate();
+            }
+        });
+    }).catch((err) => {
+        console.log(err);
+        localStorage.email = undefined;
+        localStorage.password = undefined;
+        document.querySelector("#login-modal").click();
     });
-}).catch((err) => {
-    console.log(err);
-});
+}
 
 let download = false;
 
@@ -87,7 +96,7 @@ function loadTemplate(e) {
         autoFillHTML += `<div class="card bg-base-100 shadow-xl mb-[50px]">
                 <div class="card-body py-0">
                     <div class="form-control w-full max-w-xs flex items-center">
-                        <button onclick="autofill()" class="btn btn-wide">Autofill</button>
+                        <button onclick="autofill()" class="btn btn-wide button">Autofill</button>
                     </div>
                 </div>
             </div>`
@@ -98,7 +107,7 @@ function loadTemplate(e) {
         </div><div class="card bg-base-100 shadow-xl mb-[10px]">
                 <div class="card-body py-0">
                     <div class="form-control w-full max-w-xs flex items-center">
-                        <button onclick="render()" class="btn btn-wide">Render</button>
+                        <button onclick="render()" class="btn btn-wide button">Render</button>
                     </div>
                 </div>
             </div>
@@ -139,6 +148,14 @@ function loadTemplate(e) {
                 </div>
             </div>`
     }
+    html += `
+            <div class="card bg-base-100 shadow-xl mb-[10px] mt-[50px]">
+                <div class="card-body py-0">
+                    <div class="form-control w-full max-w-xs flex items-center">
+                        <button onclick="deleteTemplate()" class="btn btn-wide button-red uppercase">Delete</button>
+                    </div>
+                </div>
+            </div>`;
     document.querySelector("#controls").innerHTML = html;
 }
 
@@ -359,4 +376,40 @@ function deleteTemplate() {
     low.deleteTemplate(loadedTemplate).then(() => {
         window.location.reload();
     })
+}
+
+function login() {
+    let email = document.querySelector("#login-email").value;
+    let password = document.querySelector("#login-password").value;
+    localStorage.email = email;
+    localStorage.password = password;
+    console.log((localStorage.email, localStorage.password));
+    load(localStorage.email, localStorage.password);
+}
+
+function logout() {
+    localStorage.email = undefined;
+    localStorage.password = undefined;
+    window.location.reload();
+}
+
+function showSignUp() {
+    document.querySelector("#signup-modal").click();
+}
+
+function signup() {
+    let email = document.querySelector("#signup-email").value;
+    let username = document.querySelector("#signup-username").value;
+    let password = document.querySelector("#signup-password").value;
+    let password2 = document.querySelector("#signup-password2").value;
+
+    if (password == password2) {
+        low.createAccount(username, email, password).then(() => {
+            localStorage.email = email;
+            localStorage.password = password;
+            window.location.reload();
+        }).catch((e) => {
+            alert("An Account With This Email or Username Has Already Been Registered");
+        })
+    }
 }

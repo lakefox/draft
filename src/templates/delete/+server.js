@@ -1,7 +1,6 @@
 function load(req, pb) {
     return new Promise((resolve, reject) => {
         pb.authStore.loadFromCookie(req.headers.authorization);
-        console.log(`username = "${req.body.username}" && name = "${req.body.name}"`);
         pb.collection('templates').getList(1, 30, {
             filter: `username = "${req.body.username}" && name = "${req.body.name}"`
         }).then((list) => {

@@ -65,6 +65,51 @@
             font-weight: 700;
             font-size: 17px;
         }
+
+        .button {
+            border-width: 1px;
+            border-radius: 5px;
+            border-color: hsl(253 60% 50%);
+            background: #000;
+            color: hsl(253 60% 50%);
+        }
+
+        .button:hover {
+            background: hsl(253 60% 50%);
+            color: #fff;
+        }
+
+        .button-red {
+            border-width: 1px;
+            border-radius: 5px;
+            border-color: rgb(204, 51, 51);
+            background: #000;
+            color: rgb(204, 51, 51);
+        }
+
+        .button-red:hover {
+            background: rgb(204, 51, 51);
+            color: #fff;
+        }
+
+        .button-gold {
+            border-width: 1px;
+            border-radius: 5px;
+            border-color: rgb(204, 184, 51);
+            background: #000;
+            color: rgb(204, 184, 51);
+            cursor: pointer;
+        }
+
+        .button-gold:hover {
+            background: rgb(204, 184, 51);
+            color: #fff;
+        }
+
+        input,
+        select {
+            border-radius: 5px !important;
+        }
     </style>
 </head>
 
@@ -83,8 +128,8 @@
         <div class="flex-1">
             <a class="btn btn-ghost normal-case text-xl">LOW</a>
         </div>
-        <div class="w-[30px] h-[30px] bg-[#ff5354] text-[25px] text-center rounded-[2px] text-[#000]">
-            <i class='bx bxs-trash mx-auto cursor-pointer' onclick="deleteTemplate()"></i>
+        <div class="button-gold p-[4px]" onclick="logout()">
+            Logout
         </div>
     </div>
     <!-- Sidebar -->
@@ -132,6 +177,46 @@
 
         <div id="editor">
 
+        </div>
+    </div>
+
+    <input type="checkbox" id="login-modal" class="modal-toggle">
+    <div class="modal">
+        <div class="modal-box rounded-[15px]">
+            <h3 class="font-bold text-lg">Login</h3>
+            <p class="py-4">
+                <input type="email" placeholder="Email" id="login-email"
+                    class="input w-full max-w-xs bg-neutral mb-[10px] text-[16px]">
+                <input type="password" placeholder="Password" id="login-password"
+                    class="input w-full max-w-xs bg-neutral text-[16px]">
+            </p>
+            <div class="modal-action">
+                <label for="login-modal" class="btn bg-black text-[#e5edf5] rounded-[5px]" onclick="showSignUp()">Sign
+                    Up</label>
+                <label for="login-modal" class="btn bg-[#2a79ff] text-[#e5edf5] rounded-[5px]"
+                    onclick="login()">Login</label>
+            </div>
+        </div>
+    </div>
+    <input type="checkbox" id="signup-modal" class="modal-toggle">
+    <div class="modal">
+        <div class="modal-box rounded-[15px]">
+            <h3 class="font-bold text-lg">Sign Up</h3>
+            <p class="py-4">
+                <input type="email" placeholder="Email" id="signup-email"
+                    class="input w-full max-w-xs bg-neutral mb-[10px] text-[16px]">
+                <input type="text" placeholder="Username" id="signup-username"
+                    class="input w-full max-w-xs bg-neutral mb-[10px] text-[16px]">
+                <input type="password" placeholder="Password (min length 8)" id="signup-password"
+                    class="input w-full max-w-xs bg-neutral text-[16px] mb-[10px]">
+                <input type="password" placeholder="Confirm Password" id="signup-password2"
+                    class="input w-full max-w-xs bg-neutral text-[16px]">
+
+            </p>
+            <div class="modal-action">
+                <label for="login-modal" class="btn bg-black text-[#e5edf5] rounded-[5px]" onclick="signup()">Sign
+                    Up</label>
+            </div>
         </div>
     </div>
 
