@@ -7,11 +7,8 @@ function load(email, password) {
     low.login(email, password).then((token) => {
         low.list().then(async (templates) => {
             templateIndex = {};
-            console.log(templates);
             for (let i = 0; i < templates.length; i++) {
-                console.log(templates[i].name);
                 let tempData = await low.get(templates[i].name);
-                console.log(tempData);
                 templateIndex[tempData.name] = await getCode(tempData);
                 templateIndex[tempData.name].carbonCopy = tempData.file;
             }
@@ -35,7 +32,6 @@ function load(email, password) {
             }
         });
     }).catch((err) => {
-        console.log(err);
         localStorage.email = undefined;
         localStorage.password = undefined;
         document.querySelector("#login-modal").click();
@@ -52,7 +48,11 @@ function loadTemplate(e) {
     editor.session.setValue(templateIndex[key].carbonCopy)
 
     let templateArgs = templateIndex[key].args;
-
+    if (templateIndex[key].fonts) {
+        for (let i = 0; i < templateIndex[key].fonts.length; i++) {
+            loadFont(templateIndex[key].fonts[i]);
+        }
+    }
     let autoFillHTML = ``;
     if (templateIndex[key].autofill) {
         autoFillHTML += `<div class="mb-[30px]">
@@ -296,7 +296,6 @@ function loadScript(text, id) {
             reject();
         };
         if (oldScript) {
-            console.log("removed")
             oldScript.parentNode.removeChild(oldScript);
         }
         script.id = id
@@ -357,7 +356,6 @@ function createTemplate() {
 }`);
     reload(true);
     low.upload("Video", editor.getValue()).then((e) => {
-        console.log(e);
     })
 }
 
@@ -366,7 +364,6 @@ function updateTemplate() {
         low.update(loadedTemplate, e.name, editor.getValue()).then((e) => {
             reload();
         }).catch((e) => {
-            console.log(e);
         })
     })
 
@@ -383,7 +380,6 @@ function login() {
     let password = document.querySelector("#login-password").value;
     localStorage.email = email;
     localStorage.password = password;
-    console.log((localStorage.email, localStorage.password));
     load(localStorage.email, localStorage.password);
 }
 
@@ -411,5 +407,14 @@ function signup() {
         }).catch((e) => {
             alert("An Account With This Email or Username Has Already Been Registered");
         })
+    }
+}
+
+function loadFont(fontName) {
+    if (document.querySelector(`link[href="https://fonts.googleapis.com/css?family=${fontName.replace(/\s/g, "+")}"]`) == null) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css?family=${fontName.replace(/\s/g, "+")}`;
+        document.head.appendChild(link);
     }
 }

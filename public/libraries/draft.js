@@ -64,7 +64,7 @@ function draft() {
         this.canvas.state[id].width = width;
         this.canvas.state[id].height = height;
     }
-    this.text = function (id, text, x, y, font = '50px sans-serif', color = "#000", stroke = false) {
+    this.text = function (id, text, x, y, font = '50px sans-serif', color = "#000", stroke = false, spaceing = "0px") {
         this.canvas.state[id] = {};
         this.canvas.state[id].type = "text";
         this.canvas.state[id].y = y;
@@ -73,6 +73,7 @@ function draft() {
         this.canvas.state[id].color = color;
         this.canvas.state[id].text = text;
         this.canvas.state[id].stroke = stroke;
+        this.canvas.state[id].letterSpacing = spaceing;
     }
     this.video = function (id, video, x, y, width, height, fps = 30) {
         this.canvas.state[id] = {};
@@ -245,6 +246,7 @@ function draft() {
                 // this.canvas.state[id].stroke = stroke;
                 this.canvas.ctx.font = element.font;
                 this.canvas.ctx.fillStyle = element.color;
+                this.canvas.ctx.letterSpacing = element.letterSpacing;
                 if (element.stroke) {
                     this.canvas.ctx.strokeStyle = element.stroke;
                     this.canvas.ctx.lineWidth = 8;
