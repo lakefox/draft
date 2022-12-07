@@ -217,7 +217,7 @@ function autofill() {
 }
 
 async function reload(newTemplate = false) {
-    let code = await getCode({ id: parseInt(Math.random() * 1000), file: editor.getValue() });
+    let code = await getCode({ id: "e" + loadedTemplate.replace(/[^a-z0-9]/gi, ''), file: editor.getValue() });
     if (!newTemplate) {
         delete templateIndex[loadedTemplate];
     }
@@ -307,7 +307,7 @@ function loadScript(text, id) {
 
 function getCode(tempData) {
     return new Promise((resolve, reject) => {
-        loadScript(`let f${tempData.id} = ${tempData.file}`, "e" + tempData.id).then(() => {
+        loadScript(`var f${tempData.id} = ${tempData.file}`, "e" + tempData.id).then(() => {
             resolve(eval(`f${tempData.id}`));
         }).catch(reject);
     });
@@ -360,7 +360,7 @@ function createTemplate() {
 }
 
 function updateTemplate() {
-    getCode({ id: parseInt(Math.random() * 1000), file: editor.getValue() }).then((e) => {
+    getCode({ id: "e" + loadedTemplate.replace(/[^a-z0-9]/gi, ''), file: editor.getValue() }).then((e) => {
         low.update(loadedTemplate, e.name, editor.getValue()).then((e) => {
             reload();
         }).catch((e) => {

@@ -46,6 +46,17 @@ function draft() {
         this.canvas.state[id].height = height;
         this.canvas.state[id].color = color;
     }
+    this.triangle = function (id, x, y, s1, s2, height, color) {
+        this.canvas.state[id] = {};
+        this.canvas.state[id].type = "triangle";
+        this.canvas.state[id].y = y;
+        this.canvas.state[id].x = x;
+        this.canvas.state[id].s1 = s1;
+        this.canvas.state[id].s2 = s2;
+        this.canvas.state[id].width = s1 + s2;
+        this.canvas.state[id].height = height;
+        this.canvas.state[id].color = color;
+    }
     this.oval = function (id, x, y, width, height, color) {
         this.canvas.state[id] = {};
         this.canvas.state[id].type = "oval";
@@ -100,6 +111,23 @@ function draft() {
     this.pause = function (id) {
         this.canvas.state[id].stop = true;
         this.canvas.state[id].video.pause();
+    }
+    this.addLGradient = function (id, colors, x0, y0, x1, y1) {
+        let gradient = this.canvas.ctx.createLinearGradient(x0, y0, x1, y1);
+        for (let i = 0; i < colors.length; i++) {
+            gradient.addColorStop(((1 / (colors.length - 1)) * i), colors[i]);
+        }
+        this.canvas.state[id].color = gradient;
+    }
+    this.addRGradient = function (id, colors, x0, y0, r0, x1, y1, r1) {
+        let gradient = this.canvas.ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+        for (let i = 0; i < colors.length; i++) {
+            gradient.addColorStop(((1 / (colors.length - 1)) * i), colors[i]);
+        }
+        this.canvas.state[id].color = gradient;
+    }
+    this.z = (id, z) => {
+        this.canvas.state[id].z = z;
     }
     this.object = function (id, cb) {
         if (cb) {
@@ -166,8 +194,23 @@ function draft() {
             return i.rotate || 0;
         }
     }
+    this.orbit = function (id, x, y, deg) {
+        this.canvas.state[id].orbit = {
+            x: x,
+            y: y,
+            rotate: deg
+        }
+    }
     this.remove = function (id) {
         delete this.canvas.state[id];
+    }
+    this.hide = function (id, hidden) {
+        var i = this.canvas.state[id];
+        if (typeof hidden != "undefined") {
+            i.hidden = hidden;
+        } else {
+            return i.hidden;
+        }
     }
     this.loop = function (amt, delay, cb) {
         var c = 0;
@@ -195,9 +238,13 @@ function draft() {
         this.canvas.stepLoops[name].function(this.canvas.stepLoops[name].i, this.canvas.stepLoops[name].args);
     }
     // Helps keep scenes inline
-    this.done = function (que, func) {
+    this.done = function (que, func, init = false) {
         if (func) {
-            window[que] = func;
+            if (!init) {
+                window[que](func);
+            } else {
+                window[que] = func;
+            }
         } else {
             window[que]();
         }
@@ -209,8 +256,25 @@ function draft() {
     this.draw = function () {
         this.canvas.ctx.fillStyle = this.canvas.color;
         this.canvas.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        for (let i = 0; i < Object.keys(this.canvas.state).length; i++) {
-            const element = this.canvas.state[Object.keys(this.canvas.state)[i]];
+        let keys = Object.keys(this.canvas.state).sort((a, b) => {
+            return (this.canvas.state[a].z || 0) - (this.canvas.state[b].z || 0);
+        });
+        for (let i = 0; i < keys.length; i++) {
+            const element = this.canvas.state[keys[i]];
+            if (element.hidden) {
+                break;
+            }
+            this.canvas.ctx.resetTransform();
+            if (element.orbit) {
+                this.canvas.ctx.translate(element.orbit.x, element.orbit.y);
+                this.canvas.ctx.rotate(element.orbit.rotate * Math.PI / 180);
+                this.canvas.ctx.translate(-(element.orbit.x), -(element.orbit.y));
+            }
+            if (element.rotate) {
+                this.canvas.ctx.translate(element.x + (element.width / 2), element.y + (element.height / 2));
+                this.canvas.ctx.rotate(element.rotate * Math.PI / 180);
+                this.canvas.ctx.translate(-(element.x + (element.width / 2)), -(element.y + (element.height / 2)));
+            }
             if (element.type == "rectangle") {
                 // this.canvas.state[id].y = y;
                 // this.canvas.state[id].x = x;
@@ -219,6 +283,21 @@ function draft() {
                 // this.canvas.state[id].color = color;
                 this.canvas.ctx.fillStyle = element.color;
                 this.canvas.ctx.fillRect(element.x, element.y, element.width, element.height);
+            } else if (element.type == "triangle") {
+                // this.canvas.state[id] = {};
+                // this.canvas.state[id].type = "triangle";
+                // this.canvas.state[id].y = y;
+                // this.canvas.state[id].x = x;
+                // this.canvas.state[id].s1 = s1;
+                // this.canvas.state[id].s2 = s2;
+                // this.canvas.state[id].height = height;
+                // this.canvas.state[id].color = color;
+                this.canvas.ctx.fillStyle = element.color;
+                this.canvas.ctx.beginPath();
+                this.canvas.ctx.moveTo(element.x, element.y);
+                this.canvas.ctx.lineTo(element.x + element.s2, element.y - element.height);
+                this.canvas.ctx.lineTo(element.x + element.s2 + element.s1, element.y);
+                this.canvas.ctx.fill();
             } else if (element.type == "oval") {
                 // this.canvas.state[id].type = "oval";
                 // this.canvas.state[id].y = y;
