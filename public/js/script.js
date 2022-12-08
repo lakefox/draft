@@ -15,13 +15,7 @@ function load(email, password) {
 
             templateNames = Object.keys(templateIndex);
 
-            document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
-                    <i class='bx bxs-file'></i> Create Template
-                </div>`;
-            for (let i = 0; i < templateNames.length; i++) {
-                const name = templateNames[i];
-                document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50 rounded-[5px]" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
-            }
+            loadSidebar();
 
             loadedTemplate = "";
             document.querySelector("#menu").click();
@@ -39,6 +33,18 @@ function load(email, password) {
 }
 
 let download = false;
+
+function loadSidebar() {
+    document.querySelector("#sideBar").innerHTML = `<div id="createTemplate" onclick="createTemplate()">
+                    <i class='bx bxs-file'></i> Create Template
+                </div><div id="addAssets" onclick="addAssets()">
+                    <i class='bx bxs-image'></i> Add/View Assets
+                </div>`;
+    for (let i = 0; i < templateNames.length; i++) {
+        const name = templateNames[i];
+        document.querySelector("#sideBar").innerHTML += `<li onclick="loadTemplate(this)" class="border-2 mb-[10px] border-slate-50 rounded-[5px]" data-name="${name}"><a>${templateIndex[name].name}</a></li>`;
+    }
+}
 
 function loadTemplate(e) {
     let key = e.dataset.name;
@@ -417,4 +423,39 @@ function loadFont(fontName) {
         link.href = `https://fonts.googleapis.com/css?family=${fontName.replace(/\s/g, "+")}`;
         document.head.appendChild(link);
     }
+}
+
+function addAssets() {
+    low.assets().then((assets) => {
+        document.querySelector("#sideBar").innerHTML = `<div class="button-red p-[4px] w-min cursor-pointer" onclick="loadSidebar()">
+            BACK
+        </div><div class="text-[30px] font-bold">Assets</div>
+        <div class="text-[20px] font-bold">New File</div>
+        <div>
+            <div class="form-control w-full max-w-xs mb-[10px]">
+                <label class="label">
+                    <span class="label-text">File Name</span>
+                </label>
+                <input type="text" placeholder="Type here" id="fileName" class="input input-bordered w-full max-w-xs" />
+            </div>
+            <input type="file" id="assets" class="input w-full max-w-xs" />
+            <div class="button p-[10px] mb-[20px] text-center font-bold cursor-pointer" onclick="uploadFile()">
+                UPLOAD
+            </div>
+        </div>`;
+        let imgs = ``;
+        for (let i = 0; i < assets.length; i++) {
+            const img = assets[i];
+            imgs += `<div><div class="text-[20px] font-bold">${img.name}</div><img src="/assets/${img.collectionId}/${img.id}/${img.file}"></div>`;
+        }
+        document.querySelector("#sideBar").innerHTML += `<div>
+            ${imgs}
+        </div>`
+    });
+}
+
+function uploadFile() {
+    low.uploadAsset(document.querySelector("#fileName").value, document.querySelector("#assets")).then(() => {
+        addAssets();
+    })
 }

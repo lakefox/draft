@@ -149,6 +149,45 @@ function LOW(baseURL = "") {
         });
     }
 
+    this.assets = () => {
+        return new Promise((resolve, reject) => {
+            fetch(`${baseURL}/assets/${this.username}`, {
+                headers: {
+                    'Authorization': token
+                }
+            }).then(r => r.json()).then((d) => {
+                if (d.err) {
+                    reject(err);
+                } else {
+                    resolve(d.assets);
+                }
+            });
+        });
+    }
+
+    this.uploadAsset = (fileName, fileInput) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.addEventListener('load', (event) => {
+                postData("/assets/upload", {
+                    username: this.username,
+                    name: fileName,
+                    data: event.target.result,
+                    fileData: fileInput.files[0]
+                }).then((d) => {
+                    console.log(d);
+                    if (d.err) {
+                        reject(d);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+            reader.readAsBinaryString(fileInput.files[0]);
+
+        });
+    }
+
     async function postData(url = '', data = {}) {
         // Default options are marked with *
         const response = await fetch(url, {

@@ -112,6 +112,26 @@ function draft() {
         this.canvas.state[id].stop = true;
         this.canvas.state[id].video.pause();
     }
+    this.sprite = function (id, url, tileW, tileH, dWidth, dHeight, pages) {
+        let img = new Image();
+        this.canvas.state[id] = {
+            tile: [tileW, tileH],
+            pages: pages,
+            tiles: [],
+            type: "sprite",
+            display: [dWidth, dHeight]
+        }
+        img.onload = () => {
+            this.canvas.state[id].src = img;
+        }
+        img.src = url;
+        return (page, indexX, indexY, x, y, cropX = 0, cropY = 0, cropW = 0, cropH = 0) => {
+            this.canvas.state[id].tiles.push({ page: page, index: [indexX, indexY], x: x, y: y, crop: [cropX, cropY, cropW, cropH] });
+        }
+    }
+    this.clearSprite = (id) => {
+        this.canvas.state[id].tiles = [];
+    }
     this.addLGradient = function (id, colors, x0, y0, x1, y1) {
         let gradient = this.canvas.ctx.createLinearGradient(x0, y0, x1, y1);
         for (let i = 0; i < colors.length; i++) {
@@ -334,6 +354,13 @@ function draft() {
                     this.canvas.ctx.strokeText(element.text, element.x, element.y);
                 }
                 this.canvas.ctx.fillText(element.text, element.x, element.y);
+            } else if (element.type == "sprite") {
+                for (let i = 0; i < element.tiles.length; i++) {
+                    const tile = element.tiles[i];
+                    let baseX = element.pages[tile.page].start[0]
+                    let baseY = element.pages[tile.page].start[1]
+                    this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + tile.crop[0], (baseY + (tile.index[1] * element.tile[1])) + tile.crop[1], element.tile[0] + tile.crop[2], element.tile[1] + tile.crop[3], tile.x, tile.y, element.display[0], element.display[1]);
+                }
             }
         }
     }

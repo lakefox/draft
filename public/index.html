@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="./assets/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="./files/logo.png" type="image/x-icon">
     <title>LOW Draft</title>
     <link href="./css/daisyui.css" rel="stylesheet" type="text/css" />
     <script src="./js/low.js"></script>
@@ -33,7 +33,7 @@
         }
 
         .bg-clear {
-            background: url(./assets/transp_bg.png);
+            background: url(./files/transp_bg.png);
         }
 
         #editorCont {
@@ -55,8 +55,21 @@
 
         #createTemplate {
             position: absolute;
-            bottom: 20px;
+            bottom: 80px;
             background: #fff;
+            width: calc(100% - 40px);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #212121;
+            font-weight: 700;
+            font-size: 17px;
+        }
+
+        #addAssets {
+            position: absolute;
+            bottom: 20px;
+            background: #e91e63;
             width: calc(100% - 40px);
             padding: 10px;
             border-radius: 4px;
@@ -228,7 +241,6 @@
             </div>
         </div>
     </div>
-
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.13.1/ace.js" type="text/javascript"
         charset="utf-8"></script>
