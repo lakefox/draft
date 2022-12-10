@@ -117,7 +117,7 @@ function draft() {
         this.canvas.state[id] = {
             tile: [tileW, tileH],
             pages: pages,
-            tiles: [],
+            groups: {},
             type: "sprite",
             display: [dWidth, dHeight]
         }
@@ -125,12 +125,55 @@ function draft() {
             this.canvas.state[id].src = img;
         }
         img.src = url;
-        return (page, indexX, indexY, x, y, cropX = 0, cropY = 0, cropW = 0, cropH = 0) => {
-            this.canvas.state[id].tiles.push({ page: page, index: [indexX, indexY], x: x, y: y, crop: [cropX, cropY, cropW, cropH] });
+        let canRef = this.canvas.state[id];
+        return (page, group) => {
+            return new Sprite(canRef, id, dWidth, dHeight, page, group);
         }
     }
-    this.clearSprite = (id) => {
-        this.canvas.state[id].tiles = [];
+    function Sprite(canRef, id, dWidth, dHeight, page, group) {
+        canRef.groups[group] = {
+            id: id,
+            page: page,
+            tiles: [],
+            z: 0,
+            rotate: 0,
+            width: dWidth,
+            height: dHeight,
+            crop: [0, 0, 0, 0]
+        };
+        this.add = (indexX, indexY, x, y) => {
+            canRef.groups[group].tiles.push({ index: [indexX, indexY], x: x, y: y });
+        }
+        this.crop = (cropX = 0, cropY = 0, cropW = 0, cropH = 0) => {
+            canRef.groups[group].crop = [cropX, cropY, cropW, cropH];
+        }
+        this.clear = () => {
+            canRef.groups[group].tiles = [];
+        }
+        this.z = (z) => {
+            canRef.groups[group].z = z;
+        }
+        this.size = (width, height) => {
+            if (width != undefined && height != undefined) {
+                canRef.groups[group].width = width;
+                canRef.groups[group].height = height;
+            } else {
+                return {
+                    width: canRef.groups[group].width,
+                    height: canRef.groups[group].height
+                }
+            }
+        }
+        this.rotate = (r) => {
+            if (r != undefined) {
+                canRef.groups[group].rotate = r;
+            } else {
+                return canRef.groups[group].rotate || 0;
+            }
+        }
+        this.page = (p) => {
+            canRef.groups[group].page = p;
+        }
     }
     this.addLGradient = function (id, colors, x0, y0, x1, y1) {
         let gradient = this.canvas.ctx.createLinearGradient(x0, y0, x1, y1);
@@ -157,24 +200,23 @@ function draft() {
         }
     }
     this.move = function (id, x, y) {
-        var i = this.canvas.state[id];
+        let i = this.canvas.state[id];
         if (!isNaN(x) && !isNaN(y)) {
             i.y = y;
             i.x = x;
         } else {
-            var xy = {
+            return {
                 x: i.x,
                 y: i.y
-            }
-            return xy;
+            };
         }
     }
     this.moveTo = function (id, time, x1, y1, x2, y2, cb) {
-        var i = this.canvas.state[id];
-        var m = (y2 - y1) / (x2 - x1);
-        var b = y1 - (x1 * m);
-        var c = 0;
-        var lp = setInterval(() => {
+        let i = this.canvas.state[id];
+        let m = (y2 - y1) / (x2 - x1);
+        let b = y1 - (x1 * m);
+        let c = 0;
+        let lp = setInterval(() => {
             c += ((x2 - x1) / time) * 10;
             i.y = ((m * (x1 + c)) + b);
             i.x = (x1 + c);
@@ -186,12 +228,12 @@ function draft() {
         }, 10);
     }
     this.size = function (id, width, height) {
-        var i = this.canvas.state[id];
+        let i = this.canvas.state[id];
         if (width && height) {
             i.width = width;
             i.height = height;
         } else {
-            var size = {
+            let size = {
                 width: i.width,
                 height: i.height
             };
@@ -199,7 +241,7 @@ function draft() {
         }
     }
     this.color = function (id, color) {
-        var i = this.canvas.state[id];
+        let i = this.canvas.state[id];
         if (color) {
             i.color = color;
         } else {
@@ -207,7 +249,7 @@ function draft() {
         }
     }
     this.rotate = function (id, deg) {
-        var i = this.canvas.state[id];
+        let i = this.canvas.state[id];
         if (deg) {
             i.rotate = deg;
         } else {
@@ -225,7 +267,7 @@ function draft() {
         delete this.canvas.state[id];
     }
     this.hide = function (id, hidden) {
-        var i = this.canvas.state[id];
+        let i = this.canvas.state[id];
         if (typeof hidden != "undefined") {
             i.hidden = hidden;
         } else {
@@ -233,8 +275,8 @@ function draft() {
         }
     }
     this.loop = function (amt, delay, cb) {
-        var c = 0;
-        var lp = setInterval(() => {
+        let c = 0;
+        let lp = setInterval(() => {
             c++
             if (c >= amt) {
                 clearInterval(lp);
@@ -355,11 +397,17 @@ function draft() {
                 }
                 this.canvas.ctx.fillText(element.text, element.x, element.y);
             } else if (element.type == "sprite") {
-                for (let i = 0; i < element.tiles.length; i++) {
-                    const tile = element.tiles[i];
-                    let baseX = element.pages[tile.page].start[0]
-                    let baseY = element.pages[tile.page].start[1]
-                    this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + tile.crop[0], (baseY + (tile.index[1] * element.tile[1])) + tile.crop[1], element.tile[0] + tile.crop[2], element.tile[1] + tile.crop[3], tile.x, tile.y, element.display[0], element.display[1]);
+                let groups = Object.keys(element.groups).sort((a, b) => {
+                    return (element.groups[a].z || 0) - (element.groups[b].z || 0);
+                });
+                for (let a = 0; a < groups.length; a++) {
+                    const group = element.groups[groups[a]];
+                    let baseX = this.canvas.state[group.id].pages[group.page].start[0]
+                    let baseY = this.canvas.state[group.id].pages[group.page].start[1]
+                    for (let b = 0; b < group.tiles.length; b++) {
+                        const tile = group.tiles[b];
+                        this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + group.crop[0], (baseY + (tile.index[1] * element.tile[1])) + group.crop[1], element.tile[0] + group.crop[2], element.tile[1] + group.crop[3], tile.x, tile.y, group.width, group.height);
+                    }
                 }
             }
         }
