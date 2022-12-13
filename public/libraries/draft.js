@@ -207,6 +207,16 @@ function draft() {
     this.z = (id, z) => {
         this.canvas.state[id].z = z;
     }
+    this.combine = (...ids) => {
+        for (let i = 1; i < ids.length; i++) {
+            this.canvas.state[ids[i]].hidden = true;
+        }
+        this.canvas.state[ids[0]] = {
+            type: "transform",
+            transform: "combine",
+            elements: ids.slice(1)
+        }
+    }
     this.object = function (id, cb) {
         if (cb) {
             window[id] = cb;
@@ -420,6 +430,12 @@ function draft() {
                 for (let b = 0; b < group.tiles.length; b++) {
                     const tile = group.tiles[b];
                     this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + group.crop[0], (baseY + (tile.index[1] * element.tile[1])) + group.crop[1], element.tile[0] + group.crop[2], element.tile[1] + group.crop[3], tile.x, tile.y, group.width, group.height);
+                }
+            } else if (element.type == "transform") {
+                if (element.transform == "combine") {
+                    let tempCan = document.createElement("canvas");
+                    let tempCTX = tempCan.getContext("2d");
+
                 }
             }
         }
