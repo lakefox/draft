@@ -139,10 +139,18 @@ function draft() {
             rotate: 0,
             width: dWidth,
             height: dHeight,
+            max_x: -Infinity,
+            min_x: Infinity,
+            max_y: -Infinity,
+            min_y: Infinity,
             crop: [0, 0, 0, 0]
         };
         this.add = (indexX, indexY, x, y) => {
             canRef.groups[group].tiles.push({ index: [indexX, indexY], x: x, y: y });
+            canRef.groups[group].max_x = Math.max(x, canRef.groups[group].max_x);
+            canRef.groups[group].min_x = Math.min(x, canRef.groups[group].min_x);
+            canRef.groups[group].max_y = Math.max(y, canRef.groups[group].max_y);
+            canRef.groups[group].min_y = Math.min(y, canRef.groups[group].min_y);
         }
         this.crop = (cropX = 0, cropY = 0, cropW = 0, cropH = 0) => {
             canRef.groups[group].crop = [cropX, cropY, cropW, cropH];
@@ -173,6 +181,13 @@ function draft() {
         }
         this.page = (p) => {
             canRef.groups[group].page = p;
+        }
+        this.orbit = function (x, y, deg) {
+            canRef.groups[group].orbit = {
+                x: x,
+                y: y,
+                rotate: deg
+            }
         }
     }
     this.addLGradient = function (id, colors, x0, y0, x1, y1) {
@@ -318,11 +333,31 @@ function draft() {
     this.draw = function () {
         this.canvas.ctx.fillStyle = this.canvas.color;
         this.canvas.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        let keys = Object.keys(this.canvas.state).sort((a, b) => {
-            return (this.canvas.state[a].z || 0) - (this.canvas.state[b].z || 0);
+        let stateStore = Object.assign({}, this.canvas.state);
+        let ssKeys = Object.keys(stateStore);
+        for (let a = 0; a < ssKeys.length; a++) {
+            const state = stateStore[ssKeys[a]];
+            if (state.type == "sprite") {
+                let copy = Object.assign({}, state);
+                let gKeys = Object.keys(copy.groups);
+                for (let b = 0; b < gKeys.length; b++) {
+                    let copy2 = Object.assign({}, copy);
+                    copy2.groups = {};
+                    let gc = copy.groups[gKeys[b]];
+                    gc.id = `${ssKeys[a]}i${b}`;
+                    copy2.groups[gKeys[b]] = gc;
+                    copy2.z = copy.groups[gKeys[b]].z;
+                    stateStore[`${ssKeys[a]}i${b}`] = copy2;
+                }
+                delete stateStore[ssKeys[a]];
+            }
+        }
+        ssKeys = Object.keys(stateStore);
+        let keys = ssKeys.sort((a, b) => {
+            return (stateStore[a].z || 0) - (stateStore[b].z || 0);
         });
         for (let i = 0; i < keys.length; i++) {
-            const element = this.canvas.state[keys[i]];
+            const element = stateStore[keys[i]];
             if (element.hidden) {
                 break;
             }
@@ -338,22 +373,9 @@ function draft() {
                 this.canvas.ctx.translate(-(element.x + (element.width / 2)), -(element.y + (element.height / 2)));
             }
             if (element.type == "rectangle") {
-                // this.canvas.state[id].y = y;
-                // this.canvas.state[id].x = x;
-                // this.canvas.state[id].width = width;
-                // this.canvas.state[id].height = height;
-                // this.canvas.state[id].color = color;
                 this.canvas.ctx.fillStyle = element.color;
                 this.canvas.ctx.fillRect(element.x, element.y, element.width, element.height);
             } else if (element.type == "triangle") {
-                // this.canvas.state[id] = {};
-                // this.canvas.state[id].type = "triangle";
-                // this.canvas.state[id].y = y;
-                // this.canvas.state[id].x = x;
-                // this.canvas.state[id].s1 = s1;
-                // this.canvas.state[id].s2 = s2;
-                // this.canvas.state[id].height = height;
-                // this.canvas.state[id].color = color;
                 this.canvas.ctx.fillStyle = element.color;
                 this.canvas.ctx.beginPath();
                 this.canvas.ctx.moveTo(element.x, element.y);
@@ -361,30 +383,13 @@ function draft() {
                 this.canvas.ctx.lineTo(element.x + element.s2 + element.s1, element.y);
                 this.canvas.ctx.fill();
             } else if (element.type == "oval") {
-                // this.canvas.state[id].type = "oval";
-                // this.canvas.state[id].y = y;
-                // this.canvas.state[id].x = x;
-                // this.canvas.state[id].width = width;
-                // this.canvas.state[id].height = height;
-                // this.canvas.state[id].color = color;
                 this.canvas.ctx.fillStyle = element.color;
                 this.canvas.ctx.beginPath();
                 this.canvas.ctx.ellipse(element.x, element.y, element.width / 2, element.height / 2, 0, 0, 2 * Math.PI);
                 this.canvas.ctx.fill();
             } else if (element.type == "image") {
-                // this.canvas.state[id].src = d;
-                // this.canvas.state[id].y = y;
-                // this.canvas.state[id].x = x;
-                // this.canvas.state[id].width = width;
-                // this.canvas.state[id].height = height;
                 this.canvas.ctx.drawImage(element.src, 0, 0, element.src.width, element.src.height, element.x, element.y, element.width, element.height);
             } else if (element.type == "text") {
-                // this.canvas.state[id].y = y;
-                // this.canvas.state[id].x = x;
-                // this.canvas.state[id].font = font;
-                // this.canvas.state[id].color = color;
-                // this.canvas.state[id].text = text;
-                // this.canvas.state[id].stroke = stroke;
                 this.canvas.ctx.font = element.font;
                 this.canvas.ctx.fillStyle = element.color;
                 this.canvas.ctx.letterSpacing = element.letterSpacing;
@@ -397,17 +402,24 @@ function draft() {
                 }
                 this.canvas.ctx.fillText(element.text, element.x, element.y);
             } else if (element.type == "sprite") {
-                let groups = Object.keys(element.groups).sort((a, b) => {
-                    return (element.groups[a].z || 0) - (element.groups[b].z || 0);
-                });
-                for (let a = 0; a < groups.length; a++) {
-                    const group = element.groups[groups[a]];
-                    let baseX = this.canvas.state[group.id].pages[group.page].start[0]
-                    let baseY = this.canvas.state[group.id].pages[group.page].start[1]
-                    for (let b = 0; b < group.tiles.length; b++) {
-                        const tile = group.tiles[b];
-                        this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + group.crop[0], (baseY + (tile.index[1] * element.tile[1])) + group.crop[1], element.tile[0] + group.crop[2], element.tile[1] + group.crop[3], tile.x, tile.y, group.width, group.height);
-                    }
+                const group = element.groups[Object.keys(element.groups)[0]];
+                let baseX = stateStore[group.id].pages[group.page].start[0]
+                let baseY = stateStore[group.id].pages[group.page].start[1]
+                this.canvas.ctx.resetTransform();
+                if (group.orbit) {
+                    this.canvas.ctx.translate(group.orbit.x, group.orbit.y);
+                    this.canvas.ctx.rotate(group.orbit.rotate * Math.PI / 180);
+                    this.canvas.ctx.translate(-(group.orbit.x), -(group.orbit.y));
+                }
+                if (group.rotate) {
+                    this.canvas.ctx.translate(group.min_x + ((Math.abs(group.min_x - group.max_x) + group.width) / 2), group.min_y + ((Math.abs(group.min_y - group.max_y) + group.height) / 2));
+                    this.canvas.ctx.rotate(group.rotate * Math.PI / 180);
+                    this.canvas.ctx.translate(-(group.min_x + ((Math.abs(group.min_x - group.max_x) + group.width) / 2)), -(group.min_y + ((Math.abs(group.min_y - group.max_y) + group.height) / 2)));
+
+                }
+                for (let b = 0; b < group.tiles.length; b++) {
+                    const tile = group.tiles[b];
+                    this.canvas.ctx.drawImage(element.src, (baseX + (tile.index[0] * element.tile[0])) + group.crop[0], (baseY + (tile.index[1] * element.tile[1])) + group.crop[1], element.tile[0] + group.crop[2], element.tile[1] + group.crop[3], tile.x, tile.y, group.width, group.height);
                 }
             }
         }
