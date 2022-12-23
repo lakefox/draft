@@ -1,7 +1,7 @@
 // Load the side menu
 let templateIndex, templateNames, loadedTemplate;
 
-let low = new LOW("draft.low.sh");
+let low = new LOW("https://draft.low.sh");
 load(localStorage.email, localStorage.password);
 function load(email, password) {
     low.login(email, password).then((token) => {
