@@ -298,9 +298,9 @@ function loadScript(text, id) {
     return new Promise((resolve, reject) => {
         let script = document.createElement("script");
         let oldScript = document.querySelector(`#${id}`);
-        script.onerror = function () {
-            reject();
-        };
+        // script.onerror = function () {
+        //     reject();
+        // };
         if (oldScript) {
             oldScript.parentNode.removeChild(oldScript);
         }
