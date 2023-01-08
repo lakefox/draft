@@ -298,9 +298,9 @@ function loadScript(text, id) {
     return new Promise((resolve, reject) => {
         let script = document.createElement("script");
         let oldScript = document.querySelector(`#${id}`);
-        // script.onerror = function () {
-        //     reject();
-        // };
+        script.onerror = function () {
+            reject();
+        };
         if (oldScript) {
             oldScript.parentNode.removeChild(oldScript);
         }
@@ -315,7 +315,9 @@ function getCode(tempData) {
     return new Promise((resolve, reject) => {
         loadScript(`var f${tempData.id} = ${tempData.file}`, "e" + tempData.id).then(() => {
             resolve(eval(`f${tempData.id}`));
-        }).catch(reject);
+        }).catch(() => {
+            resolve((() => { }))
+        });
     });
 }
 
